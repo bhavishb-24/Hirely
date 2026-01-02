@@ -82,7 +82,7 @@ export function LoginForm() {
             </div>
           </Link>
           <h1 className="text-2xl font-semibold text-foreground">Welcome back</h1>
-          <p className="text-muted-foreground mt-2">Sign in to continue to Resume AI</p>
+          <p className="text-muted-foreground mt-2">Sign in to continue to Hirely</p>
         </div>
 
         {/* Form */}

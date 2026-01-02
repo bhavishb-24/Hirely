@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { FileText, Plus, LogOut, Trash2, Edit, Loader2, Wand2, Sparkles } from "lucide-react";
+import { FileText, Plus, LogOut, Trash2, Edit, Loader2, Wand2, Target } from "lucide-react";
 import { format } from "date-fns";
 
 interface SavedResume {
@@ -91,7 +91,7 @@ export function Dashboard() {
       </div>
 
       {/* Action Cards */}
-      <div className="grid sm:grid-cols-2 gap-4">
+      <div className="grid sm:grid-cols-3 gap-4">
         <Card 
           className="cursor-pointer hover:shadow-md transition-all hover:border-primary/50"
           onClick={() => navigate("/?new=true")}
@@ -122,6 +122,23 @@ export function Dashboard() {
             </CardTitle>
             <CardDescription>
               Paste or upload your existing resume. AI will rewrite it to be ATS-friendly and impact-driven.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+
+        <Card 
+          className="cursor-pointer hover:shadow-md transition-all hover:border-primary/50"
+          onClick={() => navigate("/?tailor=true")}
+        >
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Target className="h-5 w-5 text-primary" />
+              </div>
+              Tailor to Job
+            </CardTitle>
+            <CardDescription>
+              Match your resume to a job description. Get a match score and keyword optimization.
             </CardDescription>
           </CardHeader>
         </Card>

@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, FileText, Wand2, Target, CheckCircle2, Sparkles, Download, Palette } from "lucide-react";
+import { ArrowRight, FileText, Wand2, Target, CheckCircle2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { resumeThemes } from "@/types/resumeThemes";
 
 export default function Landing() {
   const features = [
@@ -125,43 +124,6 @@ export default function Landing() {
                 </div>
                 <h3 className="text-title mb-3">{feature.title}</h3>
                 <p className="text-muted-foreground leading-relaxed">{feature.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Themes Section */}
-      <section className="py-20">
-        <div className="container-apple">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary text-sm font-medium mb-6">
-              <Palette className="w-4 h-4" />
-              Premium Themes
-            </div>
-            <h2 className="text-headline">Choose your perfect style</h2>
-            <p className="mt-4 text-body-large max-w-xl mx-auto">
-              8 professionally designed themes, all ATS-friendly and ready to impress.
-            </p>
-          </div>
-          
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {Object.values(resumeThemes).slice(0, 8).map((theme) => (
-              <div 
-                key={theme.id}
-                className="group p-6 rounded-2xl bg-card border border-border hover:border-foreground/20 hover-lift transition-all duration-300"
-              >
-                <div 
-                  className="h-32 rounded-lg bg-secondary mb-4 flex items-center justify-center overflow-hidden"
-                  style={{ fontFamily: theme.fontFamily }}
-                >
-                  <div className="text-center p-4">
-                    <div className="font-semibold text-sm mb-1">John Smith</div>
-                    <div className="text-xs text-muted-foreground">Software Engineer</div>
-                  </div>
-                </div>
-                <h4 className="font-medium text-foreground">{theme.name}</h4>
-                <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{theme.description}</p>
               </div>
             ))}
           </div>

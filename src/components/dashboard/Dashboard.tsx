@@ -71,19 +71,19 @@ export function Dashboard() {
       icon: Plus,
       title: "Build New Resume",
       description: "Start fresh with our guided form and AI enhancement.",
-      action: () => navigate("/?new=true")
+      action: () => navigate("/app?new=true")
     },
     {
       icon: Wand2,
       title: "Improve Existing",
       description: "Paste your resume and let AI transform it.",
-      action: () => navigate("/?improve=true")
+      action: () => navigate("/app?improve=true")
     },
     {
       icon: Target,
       title: "Tailor to Job",
       description: "Match your resume to a specific job posting.",
-      action: () => navigate("/?tailor=true")
+      action: () => navigate("/app?tailor=true")
     }
   ];
 
@@ -128,7 +128,7 @@ export function Dashboard() {
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={() => navigate("/?new=true")}
+              onClick={() => navigate("/app?new=true")}
               className="text-muted-foreground hover:text-foreground"
             >
               <Plus className="w-4 h-4 mr-1" />
@@ -150,7 +150,7 @@ export function Dashboard() {
             <p className="text-muted-foreground mb-8 max-w-sm mx-auto">
               Create your first AI-enhanced resume and start landing interviews.
             </p>
-            <Button onClick={() => navigate("/?new=true")} className="rounded-full px-6">
+            <Button onClick={() => navigate("/app?new=true")} className="rounded-full px-6">
               <Plus className="w-4 h-4 mr-2" />
               Create Resume
             </Button>
@@ -178,7 +178,7 @@ export function Dashboard() {
                     variant="secondary"
                     size="sm"
                     className="flex-1 rounded-lg"
-                    onClick={() => navigate(`/?resume=${resume.id}`)}
+                    onClick={() => navigate(`/app?resume=${resume.id}`)}
                   >
                     <Edit className="w-4 h-4 mr-1.5" />
                     Edit

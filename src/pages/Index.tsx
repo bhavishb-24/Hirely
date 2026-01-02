@@ -5,6 +5,8 @@ import { ResumePreview } from "@/components/resume/ResumePreview";
 import { Dashboard } from "@/components/dashboard/Dashboard";
 import { ImproveResumeInput } from "@/components/resume/ImproveResumeInput";
 import { ResumeComparison } from "@/components/resume/ResumeComparison";
+import JobDescriptionInput from "@/components/resume/JobDescriptionInput";
+import JobMatchFeedback from "@/components/resume/JobMatchFeedback";
 import { ResumeData } from "@/types/resume";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -42,7 +44,15 @@ interface ImprovedResumeData extends EnhancedResumeData {
   improvements?: string[];
 }
 
-type ViewMode = "dashboard" | "form" | "preview" | "improve" | "comparison";
+interface MatchAnalysis {
+  matchScore: number;
+  matchedKeywords: string[];
+  missingKeywords: string[];
+  suggestions: string[];
+  strengths: string[];
+}
+
+type ViewMode = "dashboard" | "form" | "preview" | "improve" | "comparison" | "tailor" | "tailored";
 
 export default function Index() {
   const [searchParams] = useSearchParams();
@@ -59,12 +69,17 @@ export default function Index() {
   const [currentResumeId, setCurrentResumeId] = useState<string | null>(null);
   const [originalResumeText, setOriginalResumeText] = useState<string>("");
   const [improvedResumeData, setImprovedResumeData] = useState<ImprovedResumeData | null>(null);
+  const [isTailoring, setIsTailoring] = useState(false);
+  const [matchAnalysis, setMatchAnalysis] = useState<MatchAnalysis | null>(null);
+  const [selectedResumeForTailor, setSelectedResumeForTailor] = useState<EnhancedResumeData | null>(null);
 
   // Handle URL params for navigation
   useEffect(() => {
     const resumeId = searchParams.get("resume");
     const isNew = searchParams.get("new");
     const isImprove = searchParams.get("improve");
+    const isTailor = searchParams.get("tailor");
+    const tailorResumeId = searchParams.get("tailorResume");
 
     if (isNew === "true") {
       setViewMode("form");
@@ -78,12 +93,60 @@ export default function Index() {
       setCurrentResumeId(null);
       setImprovedResumeData(null);
       setOriginalResumeText("");
+    } else if (isTailor === "true") {
+      if (tailorResumeId) {
+        loadResumeForTailor(tailorResumeId);
+      } else {
+        loadMostRecentResumeForTailor();
+      }
     } else if (resumeId) {
       loadResume(resumeId);
     } else {
       setViewMode("dashboard");
     }
   }, [searchParams]);
+
+  const loadResumeForTailor = async (id: string) => {
+    const { data, error } = await supabase
+      .from("resumes")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (error || !data) {
+      toast({
+        title: "Error",
+        description: "Resume not found",
+        variant: "destructive"
+      });
+      navigate("/");
+      return;
+    }
+
+    setSelectedResumeForTailor(data.enhanced_data as unknown as EnhancedResumeData);
+    setViewMode("tailor");
+  };
+
+  const loadMostRecentResumeForTailor = async () => {
+    const { data, error } = await supabase
+      .from("resumes")
+      .select("*")
+      .order("updated_at", { ascending: false })
+      .limit(1);
+
+    if (error || !data || data.length === 0) {
+      toast({
+        title: "No resume found",
+        description: "Please create a resume first before tailoring to a job.",
+        variant: "destructive"
+      });
+      navigate("/");
+      return;
+    }
+
+    setSelectedResumeForTailor(data[0].enhanced_data as unknown as EnhancedResumeData);
+    setViewMode("tailor");
+  };
 
   const loadResume = async (id: string) => {
     const { data, error } = await supabase
@@ -291,7 +354,85 @@ export default function Index() {
     setCurrentResumeId(null);
     setImprovedResumeData(null);
     setOriginalResumeText("");
+    setMatchAnalysis(null);
+    setSelectedResumeForTailor(null);
     navigate("/");
+  };
+
+  const handleTailorResume = async (jobDescription: string) => {
+    if (!selectedResumeForTailor) {
+      toast({
+        title: "Error",
+        description: "No resume selected for tailoring",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsTailoring(true);
+
+    try {
+      const { data: result, error } = await supabase.functions.invoke("tailor-resume", {
+        body: { 
+          jobDescription, 
+          resumeData: selectedResumeForTailor 
+        }
+      });
+
+      if (error) throw error;
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      const tailored = result.tailoredResume as EnhancedResumeData;
+      const analysis = result.matchAnalysis as MatchAnalysis;
+
+      setEnhancedResume(tailored);
+      setMatchAnalysis(analysis);
+      
+      // Create original data for saving
+      const originalFormat: ResumeData = {
+        fullName: tailored.fullName,
+        jobTitle: tailored.jobTitle,
+        summary: tailored.summary,
+        experiences: tailored.experiences.map((exp, i) => ({
+          id: String(i + 1),
+          role: exp.role,
+          company: exp.company,
+          duration: exp.duration,
+          responsibilities: exp.bullets.join(". ")
+        })),
+        education: tailored.education.map((edu, i) => ({
+          id: String(i + 1),
+          ...edu
+        })),
+        skills: tailored.skills.join(", "),
+        projects: tailored.projects.map((proj, i) => ({
+          id: String(i + 1),
+          ...proj
+        })),
+        certifications: tailored.certifications
+      };
+
+      setOriginalData(originalFormat);
+      await saveResume(originalFormat, tailored);
+      setViewMode("tailored");
+
+      toast({
+        title: "Resume Tailored!",
+        description: `Match score: ${analysis.matchScore}%`
+      });
+    } catch (error) {
+      console.error("Error tailoring resume:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to tailor resume",
+        variant: "destructive"
+      });
+    } finally {
+      setIsTailoring(false);
+    }
   };
 
   const handleSignOut = async () => {
@@ -380,6 +521,35 @@ export default function Index() {
               onContinue={handleContinueToPreview}
               onBack={handleBackToImprove}
             />
+          </div>
+        )}
+
+        {viewMode === "tailor" && (
+          <JobDescriptionInput
+            onTailor={handleTailorResume}
+            onBack={handleBackToDashboard}
+            isLoading={isTailoring}
+          />
+        )}
+
+        {viewMode === "tailored" && enhancedResume && matchAnalysis && (
+          <div className="max-w-6xl mx-auto">
+            <div className="mb-6">
+              <button
+                onClick={handleBackToDashboard}
+                className="text-sm text-muted-foreground hover:text-foreground"
+              >
+                ← Back to dashboard
+              </button>
+            </div>
+            <div className="grid lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                <ResumePreview data={enhancedResume} onUpdate={handleUpdateResume} />
+              </div>
+              <div className="space-y-4">
+                <JobMatchFeedback analysis={matchAnalysis} />
+              </div>
+            </div>
           </div>
         )}
 

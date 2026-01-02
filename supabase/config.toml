@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.improve-resume]
 verify_jwt = false
+
+[functions.tailor-resume]
+verify_jwt = false

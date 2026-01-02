@@ -151,7 +151,7 @@ export const resumeThemes: Record<ResumeThemeId, ResumeTheme> = {
     name: "Executive Elite",
     description: "Elegant typography with subtle separators. Ideal for senior and leadership roles.",
     fontFamily: "'Georgia', 'Times New Roman', serif",
-    isPremium: true,
+    isPremium: false,
     headerStyle: {
       fontSize: "2.25rem",
       fontWeight: "600",
@@ -185,7 +185,7 @@ export const resumeThemes: Record<ResumeThemeId, ResumeTheme> = {
     name: "Tech Focused",
     description: "Clean sans-serif with compact spacing. Perfect for software and IT roles.",
     fontFamily: "'SF Mono', 'Consolas', 'Monaco', monospace",
-    isPremium: true,
+    isPremium: false,
     headerStyle: {
       fontSize: "1.875rem",
       fontWeight: "700",
@@ -219,7 +219,7 @@ export const resumeThemes: Record<ResumeThemeId, ResumeTheme> = {
     name: "Creative Professional",
     description: "Expressive with strong visual hierarchy. ATS-safe single-column design.",
     fontFamily: "'Poppins', 'Helvetica Neue', sans-serif",
-    isPremium: true,
+    isPremium: false,
     headerStyle: {
       fontSize: "2.5rem",
       fontWeight: "800",
@@ -253,7 +253,7 @@ export const resumeThemes: Record<ResumeThemeId, ResumeTheme> = {
     name: "Academic / Research",
     description: "Formal typography emphasizing education and publications. Ideal for academia.",
     fontFamily: "'Palatino Linotype', 'Book Antiqua', Palatino, serif",
-    isPremium: true,
+    isPremium: false,
     headerStyle: {
       fontSize: "1.875rem",
       fontWeight: "400",
@@ -287,7 +287,7 @@ export const resumeThemes: Record<ResumeThemeId, ResumeTheme> = {
     name: "Minimal ATS",
     description: "Ultra-clean layout optimized for maximum ATS parsing. No icons or dividers.",
     fontFamily: "'Arial', 'Helvetica', sans-serif",
-    isPremium: true,
+    isPremium: false,
     headerStyle: {
       fontSize: "1.75rem",
       fontWeight: "700",

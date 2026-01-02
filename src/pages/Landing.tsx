@@ -58,7 +58,7 @@ export default function Landing() {
               <div className="w-8 h-8 rounded-lg bg-foreground flex items-center justify-center">
                 <FileText className="w-4 h-4 text-background" />
               </div>
-              <span className="font-semibold text-foreground">Resume AI</span>
+              <span className="font-semibold text-foreground">Hirely</span>
             </Link>
             <div className="flex items-center gap-3">
               <Button asChild variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
@@ -150,7 +150,7 @@ export default function Landing() {
       <section className="py-20">
         <div className="container-apple">
           <div className="max-w-2xl mx-auto text-center">
-            <h2 className="text-headline">Why choose Resume AI?</h2>
+            <h2 className="text-headline">Why choose Hirely?</h2>
             <p className="mt-4 text-body-large">
               We combine the power of AI with professional resume writing best practices.
             </p>
@@ -172,7 +172,7 @@ export default function Landing() {
           <Sparkles className="w-8 h-8 mx-auto mb-6 opacity-80" />
           <h2 className="text-headline text-background">Ready to stand out?</h2>
           <p className="mt-4 text-lg text-background/70 max-w-xl mx-auto">
-            Join thousands of professionals who've landed their dream jobs with Resume AI.
+            Join thousands of professionals who've landed their dream jobs with Hirely.
           </p>
           <Button 
             asChild
@@ -195,7 +195,7 @@ export default function Landing() {
               <div className="w-6 h-6 rounded-md bg-foreground flex items-center justify-center">
                 <FileText className="w-3 h-3 text-background" />
               </div>
-              <span className="text-sm text-muted-foreground">© 2025 Resume AI. All rights reserved.</span>
+              <span className="text-sm text-muted-foreground">© 2025 Hirely. All rights reserved.</span>
             </div>
             <div className="flex items-center gap-6 text-sm text-muted-foreground">
               <a href="#" className="hover:text-foreground transition-colors">About</a>

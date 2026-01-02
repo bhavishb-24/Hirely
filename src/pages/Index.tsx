@@ -453,7 +453,7 @@ export default function Index() {
               <div className="w-8 h-8 rounded-lg bg-foreground flex items-center justify-center">
                 <FileText className="w-4 h-4 text-background" />
               </div>
-              <span className="font-semibold text-foreground hidden sm:block">Resume AI</span>
+              <span className="font-semibold text-foreground hidden sm:block">Hirely</span>
             </button>
             
             <div className="flex items-center gap-4">

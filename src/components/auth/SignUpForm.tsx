@@ -67,7 +67,7 @@ export function SignUpForm() {
 
     toast({
       title: "Account created!",
-      description: "Welcome to Resume AI."
+      description: "Welcome to Hirely."
     });
     navigate("/app");
     setIsLoading(false);
@@ -84,7 +84,7 @@ export function SignUpForm() {
             </div>
           </Link>
           <h1 className="text-2xl font-semibold text-foreground">Create an account</h1>
-          <p className="text-muted-foreground mt-2">Get started with Resume AI</p>
+          <p className="text-muted-foreground mt-2">Get started with Hirely</p>
         </div>
 
         {/* Form */}

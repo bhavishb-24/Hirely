@@ -3,9 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { FileText, Plus, LogOut, Trash2, Edit, Loader2 } from "lucide-react";
+import { FileText, Plus, LogOut, Trash2, Edit, Loader2, Wand2, Sparkles } from "lucide-react";
 import { format } from "date-fns";
 
 interface SavedResume {
@@ -73,7 +73,7 @@ export function Dashboard() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
@@ -84,16 +84,47 @@ export function Dashboard() {
             Manage your resumes and create new ones
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={() => navigate("/?new=true")}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Resume
-          </Button>
-          <Button variant="outline" onClick={handleSignOut}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Sign Out
-          </Button>
-        </div>
+        <Button variant="outline" onClick={handleSignOut}>
+          <LogOut className="h-4 w-4 mr-2" />
+          Sign Out
+        </Button>
+      </div>
+
+      {/* Action Cards */}
+      <div className="grid sm:grid-cols-2 gap-4">
+        <Card 
+          className="cursor-pointer hover:shadow-md transition-all hover:border-primary/50"
+          onClick={() => navigate("/?new=true")}
+        >
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Plus className="h-5 w-5 text-primary" />
+              </div>
+              Build New Resume
+            </CardTitle>
+            <CardDescription>
+              Start from scratch with our guided form. Fill in your details and let AI enhance your content.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+
+        <Card 
+          className="cursor-pointer hover:shadow-md transition-all hover:border-primary/50"
+          onClick={() => navigate("/?improve=true")}
+        >
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Wand2 className="h-5 w-5 text-primary" />
+              </div>
+              Improve Existing Resume
+            </CardTitle>
+            <CardDescription>
+              Paste or upload your existing resume. AI will rewrite it to be ATS-friendly and impact-driven.
+            </CardDescription>
+          </CardHeader>
+        </Card>
       </div>
 
       {/* Resumes List */}

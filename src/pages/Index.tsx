@@ -3,6 +3,8 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { ResumeForm } from "@/components/resume/ResumeForm";
 import { ResumePreview } from "@/components/resume/ResumePreview";
 import { Dashboard } from "@/components/dashboard/Dashboard";
+import { ImproveResumeInput } from "@/components/resume/ImproveResumeInput";
+import { ResumeComparison } from "@/components/resume/ResumeComparison";
 import { ResumeData } from "@/types/resume";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -33,7 +35,14 @@ interface EnhancedResumeData {
   certifications: string;
 }
 
-type ViewMode = "dashboard" | "form" | "preview";
+interface ImprovedResumeData extends EnhancedResumeData {
+  email?: string;
+  phone?: string;
+  location?: string;
+  improvements?: string[];
+}
+
+type ViewMode = "dashboard" | "form" | "preview" | "improve" | "comparison";
 
 export default function Index() {
   const [searchParams] = useSearchParams();
@@ -43,21 +52,32 @@ export default function Index() {
   
   const [viewMode, setViewMode] = useState<ViewMode>("dashboard");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isImproving, setIsImproving] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [enhancedResume, setEnhancedResume] = useState<EnhancedResumeData | null>(null);
   const [originalData, setOriginalData] = useState<ResumeData | null>(null);
   const [currentResumeId, setCurrentResumeId] = useState<string | null>(null);
+  const [originalResumeText, setOriginalResumeText] = useState<string>("");
+  const [improvedResumeData, setImprovedResumeData] = useState<ImprovedResumeData | null>(null);
 
   // Handle URL params for navigation
   useEffect(() => {
     const resumeId = searchParams.get("resume");
     const isNew = searchParams.get("new");
+    const isImprove = searchParams.get("improve");
 
     if (isNew === "true") {
       setViewMode("form");
       setEnhancedResume(null);
       setOriginalData(null);
       setCurrentResumeId(null);
+    } else if (isImprove === "true") {
+      setViewMode("improve");
+      setEnhancedResume(null);
+      setOriginalData(null);
+      setCurrentResumeId(null);
+      setImprovedResumeData(null);
+      setOriginalResumeText("");
     } else if (resumeId) {
       loadResume(resumeId);
     } else {
@@ -175,6 +195,91 @@ export default function Index() {
     }
   };
 
+  const handleImproveResume = async (text: string) => {
+    setIsImproving(true);
+    setOriginalResumeText(text);
+    
+    try {
+      const { data: result, error } = await supabase.functions.invoke("improve-resume", {
+        body: { resumeText: text }
+      });
+
+      if (error) throw error;
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      const improved = result.improvedResume as ImprovedResumeData;
+      setImprovedResumeData(improved);
+      setViewMode("comparison");
+      
+      toast({
+        title: "Resume Improved!",
+        description: "Review the improvements and continue to preview."
+      });
+    } catch (error) {
+      console.error("Error improving resume:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to improve resume",
+        variant: "destructive"
+      });
+    } finally {
+      setIsImproving(false);
+    }
+  };
+
+  const handleContinueToPreview = async () => {
+    if (!improvedResumeData || !user) return;
+
+    // Convert improved data to enhanced format and save
+    const enhancedFormat: EnhancedResumeData = {
+      fullName: improvedResumeData.fullName,
+      jobTitle: improvedResumeData.jobTitle,
+      summary: improvedResumeData.summary,
+      experiences: improvedResumeData.experiences,
+      education: improvedResumeData.education,
+      skills: improvedResumeData.skills,
+      projects: improvedResumeData.projects,
+      certifications: improvedResumeData.certifications
+    };
+
+    setEnhancedResume(enhancedFormat);
+
+    // Create original data format for saving
+    const originalFormat: ResumeData = {
+      fullName: improvedResumeData.fullName,
+      jobTitle: improvedResumeData.jobTitle,
+      summary: improvedResumeData.summary,
+      experiences: improvedResumeData.experiences.map((exp, i) => ({
+        id: String(i + 1),
+        role: exp.role,
+        company: exp.company,
+        duration: exp.duration,
+        responsibilities: exp.bullets.join(". ")
+      })),
+      education: improvedResumeData.education.map((edu, i) => ({
+        id: String(i + 1),
+        ...edu
+      })),
+      skills: improvedResumeData.skills.join(", "),
+      projects: improvedResumeData.projects.map((proj, i) => ({
+        id: String(i + 1),
+        ...proj
+      })),
+      certifications: improvedResumeData.certifications
+    };
+
+    setOriginalData(originalFormat);
+    await saveResume(originalFormat, enhancedFormat);
+    setViewMode("preview");
+  };
+
+  const handleBackToImprove = () => {
+    setViewMode("improve");
+  };
+
   const handleBackToForm = () => {
     setViewMode("form");
   };
@@ -184,6 +289,8 @@ export default function Index() {
     setEnhancedResume(null);
     setOriginalData(null);
     setCurrentResumeId(null);
+    setImprovedResumeData(null);
+    setOriginalResumeText("");
     navigate("/");
   };
 
@@ -243,6 +350,39 @@ export default function Index() {
           </div>
         )}
 
+        {viewMode === "improve" && (
+          <div className="max-w-2xl mx-auto">
+            <div className="mb-6">
+              <button
+                onClick={handleBackToDashboard}
+                className="text-sm text-muted-foreground hover:text-foreground"
+              >
+                ← Back to dashboard
+              </button>
+            </div>
+            <ImproveResumeInput onImprove={handleImproveResume} isImproving={isImproving} />
+          </div>
+        )}
+
+        {viewMode === "comparison" && improvedResumeData && (
+          <div>
+            <div className="mb-6 max-w-6xl mx-auto">
+              <button
+                onClick={handleBackToDashboard}
+                className="text-sm text-muted-foreground hover:text-foreground"
+              >
+                ← Back to dashboard
+              </button>
+            </div>
+            <ResumeComparison
+              originalText={originalResumeText}
+              improvedResume={improvedResumeData}
+              onContinue={handleContinueToPreview}
+              onBack={handleBackToImprove}
+            />
+          </div>
+        )}
+
         {viewMode === "preview" && enhancedResume && (
           <div className="max-w-4xl mx-auto">
             <div className="mb-6 flex items-center justify-between">
@@ -252,12 +392,6 @@ export default function Index() {
                   className="text-sm text-muted-foreground hover:text-foreground"
                 >
                   ← Dashboard
-                </button>
-                <button
-                  onClick={handleBackToForm}
-                  className="text-sm text-muted-foreground hover:text-foreground"
-                >
-                  Edit form
                 </button>
               </div>
               {isSaving && (

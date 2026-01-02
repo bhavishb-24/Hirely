@@ -2,3 +2,6 @@ project_id = "wtgvofmmirctzvlklkbs"
 
 [functions.enhance-resume]
 verify_jwt = false
+
+[functions.improve-resume]
+verify_jwt = false

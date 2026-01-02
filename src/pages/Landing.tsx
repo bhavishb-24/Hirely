@@ -155,43 +155,18 @@ export default function Landing() {
       {/* Benefits Section */}
       <section className="py-20">
         <div className="container-apple">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <div>
-              <h2 className="text-headline">Why choose Resume AI?</h2>
-              <p className="mt-4 text-body-large">
-                We combine the power of AI with professional resume writing best practices.
-              </p>
-              <div className="mt-10 grid gap-4">
-                {benefits.map((benefit) => (
-                  <div key={benefit} className="flex items-center gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-accent flex-shrink-0" />
-                    <span className="text-foreground">{benefit}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="relative">
-              <div className="aspect-[4/3] rounded-2xl bg-secondary shadow-apple-lg overflow-hidden">
-                <div className="absolute inset-4 rounded-xl bg-card shadow-apple p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-full bg-secondary" />
-                    <div>
-                      <div className="h-3 w-24 bg-foreground/10 rounded" />
-                      <div className="h-2 w-16 bg-foreground/5 rounded mt-2" />
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="h-2 w-full bg-foreground/5 rounded" />
-                    <div className="h-2 w-4/5 bg-foreground/5 rounded" />
-                    <div className="h-2 w-3/4 bg-foreground/5 rounded" />
-                  </div>
-                  <div className="mt-6 flex gap-2">
-                    <div className="h-6 w-16 bg-accent/10 rounded-full" />
-                    <div className="h-6 w-20 bg-accent/10 rounded-full" />
-                    <div className="h-6 w-14 bg-accent/10 rounded-full" />
-                  </div>
+          <div className="max-w-2xl mx-auto text-center">
+            <h2 className="text-headline">Why choose Resume AI?</h2>
+            <p className="mt-4 text-body-large">
+              We combine the power of AI with professional resume writing best practices.
+            </p>
+            <div className="mt-10 grid sm:grid-cols-2 gap-4 text-left">
+              {benefits.map((benefit) => (
+                <div key={benefit} className="flex items-center gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-accent flex-shrink-0" />
+                  <span className="text-foreground">{benefit}</span>
                 </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>

@@ -4,6 +4,8 @@ import { Card } from "@/components/ui/card";
 import { Download, Edit2, Check } from "lucide-react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import { ThemeSelector } from "./ThemeSelector";
+import { resumeThemes, ResumeThemeId, ResumeTheme } from "@/types/resumeThemes";
 
 interface EnhancedResumeData {
   fullName: string;
@@ -38,6 +40,9 @@ export function ResumePreview({ data, onUpdate }: ResumePreviewProps) {
   const [isDownloading, setIsDownloading] = useState(false);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
+  const [selectedTheme, setSelectedTheme] = useState<ResumeThemeId>("modern-professional");
+
+  const theme = resumeThemes[selectedTheme];
 
   const startEdit = (field: string, value: string) => {
     setEditingField(field);
@@ -152,8 +157,48 @@ export function ResumePreview({ data, onUpdate }: ResumePreviewProps) {
     );
   };
 
+  // Generate inline styles based on theme
+  const getResumeStyles = (theme: ResumeTheme): React.CSSProperties => ({
+    fontFamily: theme.fontFamily,
+    fontSize: theme.bodyStyle.fontSize,
+    lineHeight: theme.bodyStyle.lineHeight,
+    color: theme.colors.bodyText,
+  });
+
+  const getHeaderStyles = (theme: ResumeTheme): React.CSSProperties => ({
+    fontSize: theme.headerStyle.fontSize,
+    fontWeight: theme.headerStyle.fontWeight,
+    textAlign: theme.headerStyle.textAlign,
+    borderBottom: theme.headerStyle.borderBottom ? `2px solid ${theme.colors.accent}` : "none",
+    marginBottom: theme.headerStyle.marginBottom,
+    paddingBottom: theme.headerStyle.borderBottom ? "1rem" : "0",
+    color: theme.colors.headerText,
+  });
+
+  const getSectionTitleStyles = (theme: ResumeTheme): React.CSSProperties => ({
+    fontSize: theme.sectionStyle.titleFontSize,
+    fontWeight: theme.sectionStyle.titleFontWeight,
+    textTransform: theme.sectionStyle.titleTextTransform,
+    letterSpacing: theme.sectionStyle.titleLetterSpacing,
+    borderBottom: theme.sectionStyle.titleBorderBottom ? `1px solid ${theme.colors.mutedText}` : "none",
+    paddingBottom: theme.sectionStyle.titleBorderBottom ? "0.25rem" : "0",
+    marginBottom: "0.75rem",
+    color: theme.sectionStyle.titleAccentColor ? theme.colors.accent : theme.colors.headerText,
+  });
+
+  const getSectionStyles = (theme: ResumeTheme): React.CSSProperties => ({
+    marginBottom: theme.sectionStyle.spacing,
+  });
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      {/* Theme Selector */}
+      <ThemeSelector 
+        selectedTheme={selectedTheme} 
+        onThemeChange={setSelectedTheme} 
+      />
+
+      {/* Download Button */}
       <div className="flex justify-end">
         <Button onClick={downloadPDF} disabled={isDownloading}>
           <Download className="h-4 w-4 mr-2" />
@@ -161,27 +206,35 @@ export function ResumePreview({ data, onUpdate }: ResumePreviewProps) {
         </Button>
       </div>
 
-      <Card className="p-0 overflow-hidden">
+      {/* Resume Preview */}
+      <Card className="p-0 overflow-hidden transition-all duration-300">
         <div
           ref={resumeRef}
-          className="bg-background p-8 md:p-12 max-w-[800px] mx-auto"
-          style={{ fontFamily: "Georgia, serif" }}
+          className="bg-white p-8 md:p-12 max-w-[800px] mx-auto"
+          style={getResumeStyles(theme)}
         >
           {/* Header */}
-          <header className="text-center mb-8 border-b border-border pb-6">
-            <h1 className="text-3xl font-bold text-foreground mb-1">
+          <header style={getHeaderStyles(theme)}>
+            <h1 style={{ margin: 0, marginBottom: "0.25rem" }}>
               {data.fullName}
             </h1>
-            <p className="text-lg text-muted-foreground">{data.jobTitle}</p>
+            <p style={{ 
+              fontSize: "1.1rem", 
+              color: theme.colors.mutedText,
+              margin: 0,
+              fontWeight: 400 
+            }}>
+              {data.jobTitle}
+            </p>
           </header>
 
           {/* Summary */}
           {data.summary && (
-            <section className="mb-6">
-              <h2 className="text-lg font-bold text-foreground uppercase tracking-wide border-b border-border pb-1 mb-3">
+            <section style={getSectionStyles(theme)}>
+              <h2 style={getSectionTitleStyles(theme)}>
                 Professional Summary
               </h2>
-              <p className="text-foreground leading-relaxed">
+              <p style={{ margin: 0 }}>
                 <EditableText field="summary" value={data.summary} />
               </p>
             </section>
@@ -189,24 +242,24 @@ export function ResumePreview({ data, onUpdate }: ResumePreviewProps) {
 
           {/* Experience */}
           {data.experiences.length > 0 && (
-            <section className="mb-6">
-              <h2 className="text-lg font-bold text-foreground uppercase tracking-wide border-b border-border pb-1 mb-3">
+            <section style={getSectionStyles(theme)}>
+              <h2 style={getSectionTitleStyles(theme)}>
                 Experience
               </h2>
               {data.experiences.map((exp, idx) => (
-                <div key={idx} className="mb-4">
-                  <div className="flex justify-between items-start mb-1">
+                <div key={idx} style={{ marginBottom: "1rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.25rem" }}>
                     <div>
-                      <h3 className="font-bold text-foreground">{exp.role}</h3>
-                      <p className="text-muted-foreground italic">{exp.company}</p>
+                      <h3 style={{ fontWeight: 600, margin: 0, color: theme.colors.bodyText }}>{exp.role}</h3>
+                      <p style={{ fontStyle: "italic", color: theme.colors.mutedText, margin: 0 }}>{exp.company}</p>
                     </div>
-                    <span className="text-muted-foreground text-sm">
+                    <span style={{ color: theme.colors.mutedText, fontSize: "0.875rem" }}>
                       {exp.duration}
                     </span>
                   </div>
-                  <ul className="list-disc list-inside text-foreground space-y-1 ml-2">
+                  <ul style={{ listStyleType: "disc", paddingLeft: "1.25rem", margin: "0.5rem 0 0 0" }}>
                     {exp.bullets.map((bullet, bulletIdx) => (
-                      <li key={bulletIdx}>
+                      <li key={bulletIdx} style={{ marginBottom: "0.25rem" }}>
                         <EditableText
                           field={`experience.${idx}.bullets.${bulletIdx}`}
                           value={bullet}
@@ -221,27 +274,27 @@ export function ResumePreview({ data, onUpdate }: ResumePreviewProps) {
 
           {/* Skills */}
           {data.skills.length > 0 && (
-            <section className="mb-6">
-              <h2 className="text-lg font-bold text-foreground uppercase tracking-wide border-b border-border pb-1 mb-3">
+            <section style={getSectionStyles(theme)}>
+              <h2 style={getSectionTitleStyles(theme)}>
                 Skills
               </h2>
-              <p className="text-foreground">{data.skills.join(" • ")}</p>
+              <p style={{ margin: 0 }}>{data.skills.join(theme.bodyStyle.skillsSeparator)}</p>
             </section>
           )}
 
           {/* Education */}
           {data.education.length > 0 && (
-            <section className="mb-6">
-              <h2 className="text-lg font-bold text-foreground uppercase tracking-wide border-b border-border pb-1 mb-3">
+            <section style={getSectionStyles(theme)}>
+              <h2 style={getSectionTitleStyles(theme)}>
                 Education
               </h2>
               {data.education.map((edu, idx) => (
-                <div key={idx} className="flex justify-between items-start mb-2">
+                <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem" }}>
                   <div>
-                    <h3 className="font-bold text-foreground">{edu.degree}</h3>
-                    <p className="text-muted-foreground italic">{edu.institution}</p>
+                    <h3 style={{ fontWeight: 600, margin: 0, color: theme.colors.bodyText }}>{edu.degree}</h3>
+                    <p style={{ fontStyle: "italic", color: theme.colors.mutedText, margin: 0 }}>{edu.institution}</p>
                   </div>
-                  <span className="text-muted-foreground text-sm">{edu.year}</span>
+                  <span style={{ color: theme.colors.mutedText, fontSize: "0.875rem" }}>{edu.year}</span>
                 </div>
               ))}
             </section>
@@ -249,14 +302,14 @@ export function ResumePreview({ data, onUpdate }: ResumePreviewProps) {
 
           {/* Projects */}
           {data.projects.length > 0 && (
-            <section className="mb-6">
-              <h2 className="text-lg font-bold text-foreground uppercase tracking-wide border-b border-border pb-1 mb-3">
+            <section style={getSectionStyles(theme)}>
+              <h2 style={getSectionTitleStyles(theme)}>
                 Projects
               </h2>
               {data.projects.map((proj, idx) => (
-                <div key={idx} className="mb-3">
-                  <h3 className="font-bold text-foreground">{proj.name}</h3>
-                  <p className="text-foreground">
+                <div key={idx} style={{ marginBottom: "0.75rem" }}>
+                  <h3 style={{ fontWeight: 600, margin: 0, color: theme.colors.bodyText }}>{proj.name}</h3>
+                  <p style={{ margin: "0.25rem 0 0 0" }}>
                     <EditableText
                       field={`project.${idx}.description`}
                       value={proj.description}
@@ -269,11 +322,11 @@ export function ResumePreview({ data, onUpdate }: ResumePreviewProps) {
 
           {/* Certifications */}
           {data.certifications && (
-            <section className="mb-6">
-              <h2 className="text-lg font-bold text-foreground uppercase tracking-wide border-b border-border pb-1 mb-3">
+            <section style={getSectionStyles(theme)}>
+              <h2 style={getSectionTitleStyles(theme)}>
                 Certifications & Achievements
               </h2>
-              <p className="text-foreground">
+              <p style={{ margin: 0 }}>
                 <EditableText field="certifications" value={data.certifications} />
               </p>
             </section>

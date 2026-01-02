@@ -5,7 +5,8 @@ import { Download, Edit2, Check } from "lucide-react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { ThemeSelector } from "./ThemeSelector";
-import { resumeThemes, ResumeThemeId, ResumeTheme } from "@/types/resumeThemes";
+import { ResumeTheme } from "@/types/resumeThemes";
+import { useResumeTheme } from "@/contexts/ResumeThemeContext";
 
 interface EnhancedResumeData {
   fullName: string;
@@ -40,9 +41,8 @@ export function ResumePreview({ data, onUpdate }: ResumePreviewProps) {
   const [isDownloading, setIsDownloading] = useState(false);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
-  const [selectedTheme, setSelectedTheme] = useState<ResumeThemeId>("modern-professional");
-
-  const theme = resumeThemes[selectedTheme];
+  
+  const { theme } = useResumeTheme();
 
   const startEdit = (field: string, value: string) => {
     setEditingField(field);
@@ -193,10 +193,7 @@ export function ResumePreview({ data, onUpdate }: ResumePreviewProps) {
   return (
     <div className="space-y-6">
       {/* Theme Selector */}
-      <ThemeSelector 
-        selectedTheme={selectedTheme} 
-        onThemeChange={setSelectedTheme} 
-      />
+      <ThemeSelector />
 
       {/* Download Button */}
       <div className="flex justify-end">

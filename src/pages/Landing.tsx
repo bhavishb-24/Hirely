@@ -61,16 +61,12 @@ export default function Landing() {
               <span className="font-semibold text-foreground">Resume AI</span>
             </Link>
             <div className="flex items-center gap-3">
-              <Link to="/auth?mode=login">
-                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-                  Sign in
-                </Button>
-              </Link>
-              <Link to="/auth?mode=signup">
-                <Button size="sm" className="rounded-full px-4">
-                  Get Started
-                </Button>
-              </Link>
+              <Button asChild variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                <Link to="/auth?mode=login">Sign in</Link>
+              </Button>
+              <Button asChild size="sm" className="rounded-full px-4">
+                <Link to="/auth?mode=signup">Get Started</Link>
+              </Button>
             </div>
           </div>
         </div>
@@ -88,17 +84,15 @@ export default function Landing() {
             Let AI enhance your experience with powerful language that stands out.
           </p>
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-delay-2">
-            <Link to="/auth?mode=signup">
-              <Button size="lg" className="rounded-full px-8 h-12 text-base shadow-apple hover-lift">
+            <Button asChild size="lg" className="rounded-full px-8 h-12 text-base shadow-apple hover-lift">
+              <Link to="/auth?mode=signup">
                 Create My Resume
                 <ArrowRight className="ml-2 w-4 h-4" />
-              </Button>
-            </Link>
-            <Link to="/auth?mode=signup">
-              <Button variant="outline" size="lg" className="rounded-full px-8 h-12 text-base hover-lift">
-                Improve My Resume
-              </Button>
-            </Link>
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="lg" className="rounded-full px-8 h-12 text-base hover-lift">
+              <Link to="/auth?mode=signup">Improve My Resume</Link>
+            </Button>
           </div>
         </div>
       </section>
@@ -141,7 +135,7 @@ export default function Landing() {
           </div>
           
           <div className="grid md:grid-cols-3 gap-8">
-            {steps.map((step, index) => (
+            {steps.map((step) => (
               <div key={step.number} className="text-center">
                 <div className="text-6xl font-semibold text-border mb-6">{step.number}</div>
                 <h3 className="text-title mb-3">{step.title}</h3>
@@ -180,15 +174,16 @@ export default function Landing() {
           <p className="mt-4 text-lg text-background/70 max-w-xl mx-auto">
             Join thousands of professionals who've landed their dream jobs with Resume AI.
           </p>
-          <Link to="/auth?mode=signup">
-            <Button 
-              size="lg" 
-              className="mt-10 rounded-full px-8 h-12 text-base bg-background text-foreground hover:bg-background/90 hover-lift"
-            >
+          <Button 
+            asChild
+            size="lg" 
+            className="mt-10 rounded-full px-8 h-12 text-base bg-background text-foreground hover:bg-background/90 hover-lift"
+          >
+            <Link to="/auth?mode=signup">
               Get started for free
               <ArrowRight className="ml-2 w-4 h-4" />
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
       </section>
 

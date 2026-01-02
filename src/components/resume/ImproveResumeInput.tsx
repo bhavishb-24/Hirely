@@ -5,6 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Upload, FileText, Wand2, Loader2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import * as pdfjsLib from "pdfjs-dist";
+
+// Set the worker source for pdf.js
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 interface ImproveResumeInputProps {
   onImprove: (text: string) => void;
@@ -45,9 +49,6 @@ export function ImproveResumeInput({ onImprove, isImproving }: ImproveResumeInpu
         const text = await file.text();
         setResumeText(text);
       } else {
-        // For PDF and DOCX, we'll extract text on the client side
-        // Using a simple approach - read as text (works for some PDFs)
-        // For production, you'd want a proper parser
         const text = await extractTextFromFile(file);
         setResumeText(text);
       }
@@ -70,14 +71,12 @@ export function ImproveResumeInput({ onImprove, isImproving }: ImproveResumeInpu
   };
 
   const extractTextFromFile = async (file: File): Promise<string> => {
-    // For PDF files, try to extract text
     if (file.type === "application/pdf") {
       const arrayBuffer = await file.arrayBuffer();
       const text = await extractTextFromPDF(arrayBuffer);
       return text;
     }
     
-    // For DOCX, extract text from XML
     if (file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
       const text = await extractTextFromDOCX(file);
       return text;
@@ -87,41 +86,30 @@ export function ImproveResumeInput({ onImprove, isImproving }: ImproveResumeInpu
   };
 
   const extractTextFromPDF = async (arrayBuffer: ArrayBuffer): Promise<string> => {
-    // Simple PDF text extraction - look for text between parentheses
-    // This is a basic approach; for production, use pdf.js or similar
-    const uint8Array = new Uint8Array(arrayBuffer);
-    const decoder = new TextDecoder("utf-8", { fatal: false });
-    const pdfContent = decoder.decode(uint8Array);
-    
-    // Try to find readable text in the PDF
-    const textMatches: string[] = [];
-    
-    // Look for text streams
-    const streamRegex = /stream\s*([\s\S]*?)\s*endstream/g;
-    let match;
-    while ((match = streamRegex.exec(pdfContent)) !== null) {
-      const content = match[1];
-      // Extract text between parentheses (common PDF text encoding)
-      const textInParens = content.match(/\(([^)]+)\)/g);
-      if (textInParens) {
-        textMatches.push(...textInParens.map(t => t.slice(1, -1)));
+    try {
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      const textParts: string[] = [];
+      
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items
+          .map((item: any) => item.str)
+          .join(" ");
+        textParts.push(pageText);
       }
+      
+      const fullText = textParts.join("\n\n").trim();
+      
+      if (fullText.length < 50) {
+        throw new Error("Could not extract enough text from PDF.");
+      }
+      
+      return fullText;
+    } catch (error) {
+      console.error("PDF extraction error:", error);
+      throw new Error("Could not extract text from PDF. Please paste your resume content manually.");
     }
-    
-    if (textMatches.length > 0) {
-      return textMatches.join(" ").replace(/\\n/g, "\n").replace(/\\/g, "");
-    }
-    
-    // Fallback: try to find any readable ASCII text
-    const readableText = pdfContent.replace(/[^\x20-\x7E\n\r]/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
-    
-    if (readableText.length > 100) {
-      return readableText;
-    }
-    
-    throw new Error("Could not extract text from PDF. Please paste your resume content.");
   };
 
   const extractTextFromDOCX = async (file: File): Promise<string> => {

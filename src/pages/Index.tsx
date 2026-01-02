@@ -356,7 +356,7 @@ export default function Index() {
     setOriginalResumeText("");
     setMatchAnalysis(null);
     setSelectedResumeForTailor(null);
-    navigate("/");
+    navigate("/app");
   };
 
   const handleTailorResume = async (jobDescription: string) => {
@@ -437,35 +437,30 @@ export default function Index() {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate("/auth?mode=login");
+    navigate("/");
   };
 
   return (
     <main className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-border bg-card">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
+        <div className="container-apple">
+          <div className="flex items-center justify-between h-16">
             <button
               onClick={handleBackToDashboard}
-              className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
             >
-              <div className="p-2 rounded-lg bg-primary text-primary-foreground">
-                <FileText className="h-6 w-6" />
+              <div className="w-8 h-8 rounded-lg bg-foreground flex items-center justify-center">
+                <FileText className="w-4 h-4 text-background" />
               </div>
-              <div className="text-left">
-                <h1 className="text-xl font-bold text-foreground">AI Resume Builder</h1>
-                <p className="text-muted-foreground text-xs hidden sm:block">
-                  Create professional, ATS-friendly resumes
-                </p>
-              </div>
+              <span className="font-semibold text-foreground hidden sm:block">Resume AI</span>
             </button>
             
             <div className="flex items-center gap-4">
               <span className="text-sm text-muted-foreground hidden sm:block">
                 {profile?.full_name}
               </span>
-              <Button variant="ghost" size="sm" onClick={handleSignOut}>
+              <Button variant="ghost" size="sm" onClick={handleSignOut} className="text-muted-foreground hover:text-foreground">
                 <LogOut className="h-4 w-4" />
               </Button>
             </div>
@@ -474,7 +469,7 @@ export default function Index() {
       </header>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
+      <div className="container-apple py-12">
         {viewMode === "dashboard" && <Dashboard />}
 
         {viewMode === "form" && (

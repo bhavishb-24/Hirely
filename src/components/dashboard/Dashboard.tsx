@@ -3,9 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { FileText, Plus, LogOut, Trash2, Edit, Loader2, Wand2, Target } from "lucide-react";
+import { FileText, Plus, Trash2, Edit, Loader2, Wand2, Target, ArrowRight } from "lucide-react";
 import { format } from "date-fns";
 
 interface SavedResume {
@@ -17,7 +16,7 @@ interface SavedResume {
 }
 
 export function Dashboard() {
-  const { profile, signOut } = useAuth();
+  const { profile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [resumes, setResumes] = useState<SavedResume[]>([]);
@@ -67,145 +66,138 @@ export function Dashboard() {
     setDeletingId(null);
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate("/auth?mode=login");
-  };
+  const actionCards = [
+    {
+      icon: Plus,
+      title: "Build New Resume",
+      description: "Start fresh with our guided form and AI enhancement.",
+      action: () => navigate("/?new=true")
+    },
+    {
+      icon: Wand2,
+      title: "Improve Existing",
+      description: "Paste your resume and let AI transform it.",
+      action: () => navigate("/?improve=true")
+    },
+    {
+      icon: Target,
+      title: "Tailor to Job",
+      description: "Match your resume to a specific job posting.",
+      action: () => navigate("/?tailor=true")
+    }
+  ];
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">
-            Welcome, {profile?.full_name || "User"}!
-          </h2>
-          <p className="text-muted-foreground">
-            Manage your resumes and create new ones
-          </p>
-        </div>
-        <Button variant="outline" onClick={handleSignOut}>
-          <LogOut className="h-4 w-4 mr-2" />
-          Sign Out
-        </Button>
+    <div className="space-y-12 animate-fade-in">
+      {/* Welcome Header */}
+      <div>
+        <h2 className="text-headline text-foreground">
+          Welcome back{profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}
+        </h2>
+        <p className="mt-2 text-body-large">
+          What would you like to do today?
+        </p>
       </div>
 
       {/* Action Cards */}
       <div className="grid sm:grid-cols-3 gap-4">
-        <Card 
-          className="cursor-pointer hover:shadow-md transition-all hover:border-primary/50"
-          onClick={() => navigate("/?new=true")}
-        >
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <Plus className="h-5 w-5 text-primary" />
-              </div>
-              Build New Resume
-            </CardTitle>
-            <CardDescription>
-              Start from scratch with our guided form. Fill in your details and let AI enhance your content.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-
-        <Card 
-          className="cursor-pointer hover:shadow-md transition-all hover:border-primary/50"
-          onClick={() => navigate("/?improve=true")}
-        >
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <Wand2 className="h-5 w-5 text-primary" />
-              </div>
-              Improve Existing Resume
-            </CardTitle>
-            <CardDescription>
-              Paste or upload your existing resume. AI will rewrite it to be ATS-friendly and impact-driven.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-
-        <Card 
-          className="cursor-pointer hover:shadow-md transition-all hover:border-primary/50"
-          onClick={() => navigate("/?tailor=true")}
-        >
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <Target className="h-5 w-5 text-primary" />
-              </div>
-              Tailor to Job
-            </CardTitle>
-            <CardDescription>
-              Match your resume to a job description. Get a match score and keyword optimization.
-            </CardDescription>
-          </CardHeader>
-        </Card>
+        {actionCards.map((card, index) => (
+          <button
+            key={card.title}
+            onClick={card.action}
+            className={`group p-6 rounded-2xl bg-card border border-border text-left shadow-apple hover-lift transition-all duration-300 hover:border-foreground/20 animate-fade-in-delay-${index + 1}`}
+          >
+            <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center mb-5 group-hover:bg-foreground group-hover:text-background transition-colors duration-300">
+              <card.icon className="w-6 h-6" />
+            </div>
+            <h3 className="text-title mb-2">{card.title}</h3>
+            <p className="text-muted-foreground text-sm leading-relaxed">{card.description}</p>
+            <div className="mt-4 flex items-center text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
+              Get started
+              <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </button>
+        ))}
       </div>
 
       {/* Resumes List */}
       <div>
-        <h3 className="text-lg font-semibold text-foreground mb-4">Your Resumes</h3>
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-title text-foreground">Your Resumes</h3>
+          {resumes.length > 0 && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => navigate("/?new=true")}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <Plus className="w-4 h-4 mr-1" />
+              New Resume
+            </Button>
+          )}
+        </div>
         
         {isLoading ? (
-          <div className="flex items-center justify-center py-12">
+          <div className="flex items-center justify-center py-20">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         ) : resumes.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-              <h4 className="text-lg font-medium text-foreground mb-2">No resumes yet</h4>
-              <p className="text-muted-foreground text-center mb-4">
-                Create your first AI-enhanced resume
-              </p>
-              <Button onClick={() => navigate("/?new=true")}>
-                <Plus className="h-4 w-4 mr-2" />
-                Create Resume
-              </Button>
-            </CardContent>
-          </Card>
+          <div className="text-center py-20 px-4 rounded-2xl bg-surface border border-border">
+            <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center mx-auto mb-6">
+              <FileText className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <h4 className="text-title mb-2">No resumes yet</h4>
+            <p className="text-muted-foreground mb-8 max-w-sm mx-auto">
+              Create your first AI-enhanced resume and start landing interviews.
+            </p>
+            <Button onClick={() => navigate("/?new=true")} className="rounded-full px-6">
+              <Plus className="w-4 h-4 mr-2" />
+              Create Resume
+            </Button>
+          </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
             {resumes.map((resume) => (
-              <Card key={resume.id} className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <FileText className="h-5 w-5 text-primary" />
-                    {resume.title}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Last updated {format(new Date(resume.updated_at), "MMM d, yyyy")}
-                  </p>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => navigate(`/?resume=${resume.id}`)}
-                    >
-                      <Edit className="h-4 w-4 mr-1" />
-                      Edit
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDelete(resume.id)}
-                      disabled={deletingId === resume.id}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      {deletingId === resume.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Trash2 className="h-4 w-4" />
-                      )}
-                    </Button>
+              <div 
+                key={resume.id} 
+                className="group p-5 rounded-xl bg-card border border-border hover:border-foreground/20 shadow-apple hover-lift transition-all duration-300"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
+                    <FileText className="w-5 h-5 text-muted-foreground" />
                   </div>
-                </CardContent>
-              </Card>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium text-foreground truncate">{resume.title}</h4>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Updated {format(new Date(resume.updated_at), "MMM d, yyyy")}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-2 mt-4">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="flex-1 rounded-lg"
+                    onClick={() => navigate(`/?resume=${resume.id}`)}
+                  >
+                    <Edit className="w-4 h-4 mr-1.5" />
+                    Edit
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDelete(resume.id)}
+                    disabled={deletingId === resume.id}
+                    className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                  >
+                    {deletingId === resume.id ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-4 h-4" />
+                    )}
+                  </Button>
+                </div>
+              </div>
             ))}
           </div>
         )}

@@ -9,7 +9,6 @@ import { CustomizationPanel } from "./customization/CustomizationPanel";
 import { useResumeTheme } from "@/contexts/ResumeThemeContext";
 import { useResumeCustomization } from "@/contexts/ResumeCustomizationContext";
 import { 
-  fontFamilyMap, 
   sectionTitleLabels, 
   SectionId 
 } from "@/types/resumeCustomization";
@@ -192,21 +191,6 @@ export function ResumePreview({ data, onUpdate }: ResumePreviewProps) {
     }
   };
 
-  // Skills display based on settings
-  const renderSkills = () => {
-    if (!data.skills || data.skills.length === 0) return null;
-    
-    switch (customization.skills.displayStyle) {
-      case "bullets":
-        return <p style={{ margin: 0 }}>{data.skills.join(" • ")}</p>;
-      case "grouped":
-        return <p style={{ margin: 0 }}>{data.skills.join(" | ")}</p>;
-      case "comma":
-      default:
-        return <p style={{ margin: 0 }}>{data.skills.join(", ")}</p>;
-    }
-  };
-
   // Build contact info array
   const contactInfo: string[] = [];
   if (customization.header.showEmail && data.email) contactInfo.push(data.email);
@@ -215,42 +199,44 @@ export function ResumePreview({ data, onUpdate }: ResumePreviewProps) {
   if (customization.header.showLinkedIn && data.linkedin) contactInfo.push(data.linkedin);
   if (customization.header.showPortfolio && data.portfolio) contactInfo.push(data.portfolio);
 
-  // Styles based on customization
+  // Combine theme + customization - theme provides base, customization can override
   const resumeStyles: React.CSSProperties = {
-    fontFamily: fontFamilyMap[customization.typography.fontFamily],
-    fontSize: `${customization.typography.bodyFontSize}px`,
-    lineHeight: customization.typography.lineHeight,
+    fontFamily: theme.fontFamily, // Use theme font
+    fontSize: theme.bodyStyle.fontSize,
+    lineHeight: theme.bodyStyle.lineHeight,
     letterSpacing: `${customization.typography.letterSpacing}em`,
-    color: "#1a1a1a",
+    color: theme.colors.bodyText,
     padding: `${customization.layout.pageMargin}mm`,
   };
 
   const headerStyles: React.CSSProperties = {
-    textAlign: customization.header.alignment,
-    marginBottom: `${customization.layout.sectionSpacing}rem`,
+    textAlign: theme.headerStyle.textAlign,
+    marginBottom: theme.headerStyle.marginBottom,
+    borderBottom: theme.headerStyle.borderBottom ? `2px solid ${theme.colors.accent}` : "none",
+    paddingBottom: theme.headerStyle.borderBottom ? "1rem" : "0",
   };
 
   const nameStyles: React.CSSProperties = {
-    fontSize: `${customization.typography.nameFontSize}px`,
-    fontWeight: 700,
+    fontSize: theme.headerStyle.fontSize,
+    fontWeight: theme.headerStyle.fontWeight as React.CSSProperties["fontWeight"],
     margin: 0,
     marginBottom: "0.25rem",
-    color: "#1a1a1a",
+    color: theme.colors.headerText,
   };
 
   const sectionTitleStyles: React.CSSProperties = {
-    fontSize: `${customization.typography.sectionHeaderFontSize}px`,
-    fontWeight: 600,
-    textTransform: "uppercase",
-    letterSpacing: "0.05em",
+    fontSize: theme.sectionStyle.titleFontSize,
+    fontWeight: theme.sectionStyle.titleFontWeight as React.CSSProperties["fontWeight"],
+    textTransform: theme.sectionStyle.titleTextTransform,
+    letterSpacing: theme.sectionStyle.titleLetterSpacing,
     marginBottom: "0.75rem",
-    paddingBottom: "0.25rem",
-    borderBottom: `1px solid ${customization.colors.accentColor}`,
-    color: customization.colors.accentColor,
+    paddingBottom: theme.sectionStyle.titleBorderBottom ? "0.25rem" : "0",
+    borderBottom: theme.sectionStyle.titleBorderBottom ? `1px solid ${theme.colors.mutedText}` : "none",
+    color: theme.sectionStyle.titleAccentColor ? theme.colors.accent : theme.colors.headerText,
   };
 
   const sectionStyles: React.CSSProperties = {
-    marginBottom: `${customization.layout.sectionSpacing}rem`,
+    marginBottom: theme.sectionStyle.spacing,
   };
 
   const bulletStyles: React.CSSProperties = {
@@ -280,10 +266,10 @@ export function ResumePreview({ data, onUpdate }: ResumePreviewProps) {
               <div key={idx} style={{ marginBottom: "1rem" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.25rem" }}>
                   <div>
-                    <h3 style={{ fontWeight: 600, margin: 0, color: "#1a1a1a" }}>{exp.role}</h3>
-                    <p style={{ fontStyle: "italic", color: "#666", margin: 0 }}>{exp.company}</p>
+                    <h3 style={{ fontWeight: 600, margin: 0, color: theme.colors.bodyText }}>{exp.role}</h3>
+                    <p style={{ fontStyle: "italic", color: theme.colors.mutedText, margin: 0 }}>{exp.company}</p>
                   </div>
-                  <span style={{ color: "#666", fontSize: "0.875rem" }}>{exp.duration}</span>
+                  <span style={{ color: theme.colors.mutedText, fontSize: "0.875rem" }}>{exp.duration}</span>
                 </div>
                 <ul style={{ listStyleType: "disc", paddingLeft: "1.25rem", margin: "0.5rem 0 0 0" }}>
                   {exp.bullets.map((bullet, bulletIdx) => (
@@ -302,7 +288,7 @@ export function ResumePreview({ data, onUpdate }: ResumePreviewProps) {
         return (
           <section key={sectionId} style={sectionStyles}>
             <h2 style={sectionTitleStyles}>{getSectionTitle("skills")}</h2>
-            {renderSkills()}
+            <p style={{ margin: 0 }}>{data.skills.join(theme.bodyStyle.skillsSeparator)}</p>
           </section>
         );
 
@@ -314,10 +300,10 @@ export function ResumePreview({ data, onUpdate }: ResumePreviewProps) {
             {data.education.map((edu, idx) => (
               <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem" }}>
                 <div>
-                  <h3 style={{ fontWeight: 600, margin: 0, color: "#1a1a1a" }}>{edu.degree}</h3>
-                  <p style={{ fontStyle: "italic", color: "#666", margin: 0 }}>{edu.institution}</p>
+                  <h3 style={{ fontWeight: 600, margin: 0, color: theme.colors.bodyText }}>{edu.degree}</h3>
+                  <p style={{ fontStyle: "italic", color: theme.colors.mutedText, margin: 0 }}>{edu.institution}</p>
                 </div>
-                <span style={{ color: "#666", fontSize: "0.875rem" }}>{edu.year}</span>
+                <span style={{ color: theme.colors.mutedText, fontSize: "0.875rem" }}>{edu.year}</span>
               </div>
             ))}
           </section>
@@ -330,7 +316,7 @@ export function ResumePreview({ data, onUpdate }: ResumePreviewProps) {
             <h2 style={sectionTitleStyles}>{getSectionTitle("projects")}</h2>
             {data.projects.map((proj, idx) => (
               <div key={idx} style={{ marginBottom: "0.75rem" }}>
-                <h3 style={{ fontWeight: 600, margin: 0, color: "#1a1a1a" }}>{proj.name}</h3>
+                <h3 style={{ fontWeight: 600, margin: 0, color: theme.colors.bodyText }}>{proj.name}</h3>
                 <p style={{ margin: "0.25rem 0 0 0" }}>
                   <EditableText field={`project.${idx}.description`} value={proj.description} />
                 </p>
@@ -405,7 +391,7 @@ export function ResumePreview({ data, onUpdate }: ResumePreviewProps) {
             <h1 style={nameStyles}>{data.fullName}</h1>
             <p style={{ 
               fontSize: "1.1rem", 
-              color: "#666",
+              color: theme.colors.mutedText,
               margin: 0,
               fontWeight: 400 
             }}>
@@ -414,7 +400,7 @@ export function ResumePreview({ data, onUpdate }: ResumePreviewProps) {
             {contactInfo.length > 0 && (
               <p style={{ 
                 fontSize: "0.875rem", 
-                color: "#666",
+                color: theme.colors.mutedText,
                 margin: "0.5rem 0 0 0",
               }}>
                 {contactInfo.join(getSeparator())}

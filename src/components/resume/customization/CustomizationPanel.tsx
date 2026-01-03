@@ -6,11 +6,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useResumeCustomization } from "@/contexts/ResumeCustomizationContext";
 import { SectionsPanel } from "./SectionsPanel";
 import { TypographyPanel } from "./TypographyPanel";
-import { LayoutPanel } from "./LayoutPanel";
 import { ColorPanel } from "./ColorPanel";
 import { HeaderPanel } from "./HeaderPanel";
 import { SkillsPanel } from "./SkillsPanel";
-import { Settings2, RotateCcw, Layers, Type, Layout, Palette, User, Wrench } from "lucide-react";
+import { Settings2, RotateCcw, Layers, Type, Palette, User, Wrench } from "lucide-react";
 
 interface CustomizationPanelProps {
   trigger?: React.ReactNode;
@@ -62,19 +61,15 @@ export function CustomizationPanel({ trigger }: CustomizationPanelProps) {
                 <Type className="w-3 h-3 mr-1" />
                 Type
               </TabsTrigger>
-              <TabsTrigger value="layout" className="text-xs">
-                <Layout className="w-3 h-3 mr-1" />
-                Layout
+              <TabsTrigger value="colors" className="text-xs">
+                <Palette className="w-3 h-3 mr-1" />
+                Colors
               </TabsTrigger>
             </TabsList>
           </div>
           
           <div className="px-6 pt-2">
-            <TabsList className="grid grid-cols-3 w-full">
-              <TabsTrigger value="colors" className="text-xs">
-                <Palette className="w-3 h-3 mr-1" />
-                Colors
-              </TabsTrigger>
+            <TabsList className="grid grid-cols-2 w-full">
               <TabsTrigger value="header" className="text-xs">
                 <User className="w-3 h-3 mr-1" />
                 Header
@@ -93,9 +88,6 @@ export function CustomizationPanel({ trigger }: CustomizationPanelProps) {
               </TabsContent>
               <TabsContent value="typography" className="mt-0">
                 <TypographyPanel />
-              </TabsContent>
-              <TabsContent value="layout" className="mt-0">
-                <LayoutPanel />
               </TabsContent>
               <TabsContent value="colors" className="mt-0">
                 <ColorPanel />

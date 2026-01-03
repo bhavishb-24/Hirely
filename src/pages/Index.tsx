@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ResumeForm } from "@/components/resume/ResumeForm";
-import { ResumePreview } from "@/components/resume/ResumePreview";
+import { ResumePreview, EnhancedResumeData } from "@/components/resume/ResumePreview";
 import { Dashboard } from "@/components/dashboard/Dashboard";
 import { ImproveResumeInput } from "@/components/resume/ImproveResumeInput";
 import { ResumeComparison } from "@/components/resume/ResumeComparison";
@@ -13,29 +13,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { FileText, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-interface EnhancedResumeData {
-  fullName: string;
-  jobTitle: string;
-  summary: string;
-  experiences: {
-    role: string;
-    company: string;
-    duration: string;
-    bullets: string[];
-  }[];
-  education: {
-    degree: string;
-    institution: string;
-    year: string;
-  }[];
-  skills: string[];
-  projects: {
-    name: string;
-    description: string;
-  }[];
-  certifications: string;
-}
 
 interface ImprovedResumeData extends EnhancedResumeData {
   email?: string;

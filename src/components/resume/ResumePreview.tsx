@@ -5,12 +5,23 @@ import { Download, Edit2, Check } from "lucide-react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { ThemeSelector } from "./ThemeSelector";
-import { ResumeTheme } from "@/types/resumeThemes";
+import { CustomizationPanel } from "./customization/CustomizationPanel";
 import { useResumeTheme } from "@/contexts/ResumeThemeContext";
+import { useResumeCustomization } from "@/contexts/ResumeCustomizationContext";
+import { 
+  fontFamilyMap, 
+  sectionTitleLabels, 
+  SectionId 
+} from "@/types/resumeCustomization";
 
-interface EnhancedResumeData {
+export interface EnhancedResumeData {
   fullName: string;
   jobTitle: string;
+  email?: string;
+  phone?: string;
+  location?: string;
+  linkedin?: string;
+  portfolio?: string;
   summary: string;
   experiences: {
     role: string;
@@ -29,6 +40,8 @@ interface EnhancedResumeData {
     description: string;
   }[];
   certifications: string;
+  achievements?: string[];
+  publications?: string[];
 }
 
 interface ResumePreviewProps {
@@ -43,6 +56,7 @@ export function ResumePreview({ data, onUpdate }: ResumePreviewProps) {
   const [editValue, setEditValue] = useState("");
   
   const { theme } = useResumeTheme();
+  const { customization } = useResumeCustomization();
 
   const startEdit = (field: string, value: string) => {
     setEditingField(field);
@@ -157,49 +171,225 @@ export function ResumePreview({ data, onUpdate }: ResumePreviewProps) {
     );
   };
 
-  // Generate inline styles based on theme
-  const getResumeStyles = (theme: ResumeTheme): React.CSSProperties => ({
-    fontFamily: theme.fontFamily,
-    fontSize: theme.bodyStyle.fontSize,
-    lineHeight: theme.bodyStyle.lineHeight,
-    color: theme.colors.bodyText,
-  });
+  // Get sorted visible sections
+  const visibleSections = customization.sections
+    .filter(s => s.visible)
+    .sort((a, b) => a.order - b.order);
 
-  const getHeaderStyles = (theme: ResumeTheme): React.CSSProperties => ({
-    fontSize: theme.headerStyle.fontSize,
-    fontWeight: theme.headerStyle.fontWeight,
-    textAlign: theme.headerStyle.textAlign,
-    borderBottom: theme.headerStyle.borderBottom ? `2px solid ${theme.colors.accent}` : "none",
-    marginBottom: theme.headerStyle.marginBottom,
-    paddingBottom: theme.headerStyle.borderBottom ? "1rem" : "0",
-    color: theme.colors.headerText,
-  });
+  // Get section title (custom or default)
+  const getSectionTitle = (sectionId: SectionId) => {
+    const section = customization.sections.find(s => s.id === sectionId);
+    return section?.customTitle || sectionTitleLabels[sectionId];
+  };
 
-  const getSectionTitleStyles = (theme: ResumeTheme): React.CSSProperties => ({
-    fontSize: theme.sectionStyle.titleFontSize,
-    fontWeight: theme.sectionStyle.titleFontWeight,
-    textTransform: theme.sectionStyle.titleTextTransform,
-    letterSpacing: theme.sectionStyle.titleLetterSpacing,
-    borderBottom: theme.sectionStyle.titleBorderBottom ? `1px solid ${theme.colors.mutedText}` : "none",
-    paddingBottom: theme.sectionStyle.titleBorderBottom ? "0.25rem" : "0",
+  // Get separator character based on settings
+  const getSeparator = () => {
+    switch (customization.header.separatorStyle) {
+      case "dot": return " • ";
+      case "line": return " | ";
+      case "space": return "   ";
+      default: return " • ";
+    }
+  };
+
+  // Skills display based on settings
+  const renderSkills = () => {
+    if (!data.skills || data.skills.length === 0) return null;
+    
+    switch (customization.skills.displayStyle) {
+      case "bullets":
+        return <p style={{ margin: 0 }}>{data.skills.join(" • ")}</p>;
+      case "grouped":
+        return <p style={{ margin: 0 }}>{data.skills.join(" | ")}</p>;
+      case "comma":
+      default:
+        return <p style={{ margin: 0 }}>{data.skills.join(", ")}</p>;
+    }
+  };
+
+  // Build contact info array
+  const contactInfo: string[] = [];
+  if (customization.header.showEmail && data.email) contactInfo.push(data.email);
+  if (customization.header.showPhone && data.phone) contactInfo.push(data.phone);
+  if (customization.header.showLocation && data.location) contactInfo.push(data.location);
+  if (customization.header.showLinkedIn && data.linkedin) contactInfo.push(data.linkedin);
+  if (customization.header.showPortfolio && data.portfolio) contactInfo.push(data.portfolio);
+
+  // Styles based on customization
+  const resumeStyles: React.CSSProperties = {
+    fontFamily: fontFamilyMap[customization.typography.fontFamily],
+    fontSize: `${customization.typography.bodyFontSize}px`,
+    lineHeight: customization.typography.lineHeight,
+    letterSpacing: `${customization.typography.letterSpacing}em`,
+    color: "#1a1a1a",
+    padding: `${customization.layout.pageMargin}mm`,
+  };
+
+  const headerStyles: React.CSSProperties = {
+    textAlign: customization.header.alignment,
+    marginBottom: `${customization.layout.sectionSpacing}rem`,
+  };
+
+  const nameStyles: React.CSSProperties = {
+    fontSize: `${customization.typography.nameFontSize}px`,
+    fontWeight: 700,
+    margin: 0,
+    marginBottom: "0.25rem",
+    color: "#1a1a1a",
+  };
+
+  const sectionTitleStyles: React.CSSProperties = {
+    fontSize: `${customization.typography.sectionHeaderFontSize}px`,
+    fontWeight: 600,
+    textTransform: "uppercase",
+    letterSpacing: "0.05em",
     marginBottom: "0.75rem",
-    color: theme.sectionStyle.titleAccentColor ? theme.colors.accent : theme.colors.headerText,
-  });
+    paddingBottom: "0.25rem",
+    borderBottom: `1px solid ${customization.colors.accentColor}`,
+    color: customization.colors.accentColor,
+  };
 
-  const getSectionStyles = (theme: ResumeTheme): React.CSSProperties => ({
-    marginBottom: theme.sectionStyle.spacing,
-  });
+  const sectionStyles: React.CSSProperties = {
+    marginBottom: `${customization.layout.sectionSpacing}rem`,
+  };
+
+  const bulletStyles: React.CSSProperties = {
+    marginBottom: `${customization.layout.bulletSpacing}rem`,
+  };
+
+  // Render individual sections
+  const renderSection = (sectionId: SectionId) => {
+    switch (sectionId) {
+      case "summary":
+        if (!data.summary) return null;
+        return (
+          <section key={sectionId} style={sectionStyles}>
+            <h2 style={sectionTitleStyles}>{getSectionTitle("summary")}</h2>
+            <p style={{ margin: 0 }}>
+              <EditableText field="summary" value={data.summary} />
+            </p>
+          </section>
+        );
+
+      case "experience":
+        if (!data.experiences || data.experiences.length === 0) return null;
+        return (
+          <section key={sectionId} style={sectionStyles}>
+            <h2 style={sectionTitleStyles}>{getSectionTitle("experience")}</h2>
+            {data.experiences.map((exp, idx) => (
+              <div key={idx} style={{ marginBottom: "1rem" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.25rem" }}>
+                  <div>
+                    <h3 style={{ fontWeight: 600, margin: 0, color: "#1a1a1a" }}>{exp.role}</h3>
+                    <p style={{ fontStyle: "italic", color: "#666", margin: 0 }}>{exp.company}</p>
+                  </div>
+                  <span style={{ color: "#666", fontSize: "0.875rem" }}>{exp.duration}</span>
+                </div>
+                <ul style={{ listStyleType: "disc", paddingLeft: "1.25rem", margin: "0.5rem 0 0 0" }}>
+                  {exp.bullets.map((bullet, bulletIdx) => (
+                    <li key={bulletIdx} style={bulletStyles}>
+                      <EditableText field={`experience.${idx}.bullets.${bulletIdx}`} value={bullet} />
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </section>
+        );
+
+      case "skills":
+        if (!data.skills || data.skills.length === 0) return null;
+        return (
+          <section key={sectionId} style={sectionStyles}>
+            <h2 style={sectionTitleStyles}>{getSectionTitle("skills")}</h2>
+            {renderSkills()}
+          </section>
+        );
+
+      case "education":
+        if (!data.education || data.education.length === 0) return null;
+        return (
+          <section key={sectionId} style={sectionStyles}>
+            <h2 style={sectionTitleStyles}>{getSectionTitle("education")}</h2>
+            {data.education.map((edu, idx) => (
+              <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem" }}>
+                <div>
+                  <h3 style={{ fontWeight: 600, margin: 0, color: "#1a1a1a" }}>{edu.degree}</h3>
+                  <p style={{ fontStyle: "italic", color: "#666", margin: 0 }}>{edu.institution}</p>
+                </div>
+                <span style={{ color: "#666", fontSize: "0.875rem" }}>{edu.year}</span>
+              </div>
+            ))}
+          </section>
+        );
+
+      case "projects":
+        if (!data.projects || data.projects.length === 0) return null;
+        return (
+          <section key={sectionId} style={sectionStyles}>
+            <h2 style={sectionTitleStyles}>{getSectionTitle("projects")}</h2>
+            {data.projects.map((proj, idx) => (
+              <div key={idx} style={{ marginBottom: "0.75rem" }}>
+                <h3 style={{ fontWeight: 600, margin: 0, color: "#1a1a1a" }}>{proj.name}</h3>
+                <p style={{ margin: "0.25rem 0 0 0" }}>
+                  <EditableText field={`project.${idx}.description`} value={proj.description} />
+                </p>
+              </div>
+            ))}
+          </section>
+        );
+
+      case "certifications":
+        if (!data.certifications) return null;
+        return (
+          <section key={sectionId} style={sectionStyles}>
+            <h2 style={sectionTitleStyles}>{getSectionTitle("certifications")}</h2>
+            <p style={{ margin: 0 }}>
+              <EditableText field="certifications" value={data.certifications} />
+            </p>
+          </section>
+        );
+
+      case "achievements":
+        if (!data.achievements || data.achievements.length === 0) return null;
+        return (
+          <section key={sectionId} style={sectionStyles}>
+            <h2 style={sectionTitleStyles}>{getSectionTitle("achievements")}</h2>
+            <ul style={{ listStyleType: "disc", paddingLeft: "1.25rem", margin: 0 }}>
+              {data.achievements.map((achievement, idx) => (
+                <li key={idx} style={bulletStyles}>{achievement}</li>
+              ))}
+            </ul>
+          </section>
+        );
+
+      case "publications":
+        if (!data.publications || data.publications.length === 0) return null;
+        return (
+          <section key={sectionId} style={sectionStyles}>
+            <h2 style={sectionTitleStyles}>{getSectionTitle("publications")}</h2>
+            {data.publications.map((pub, idx) => (
+              <p key={idx} style={{ margin: 0, marginBottom: "0.5rem" }}>{pub}</p>
+            ))}
+          </section>
+        );
+
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className="space-y-6">
-      {/* Theme Selector */}
-      <ThemeSelector />
-
-      {/* Download Button */}
-      <div className="flex justify-end">
+      {/* Controls Row */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <ThemeSelector />
+          <CustomizationPanel />
+        </div>
         <Button onClick={downloadPDF} disabled={isDownloading}>
           <Download className="h-4 w-4 mr-2" />
-          {isDownloading ? "Generating PDF..." : "Download as PDF"}
+          {isDownloading ? "Generating PDF..." : "Download PDF"}
         </Button>
       </div>
 
@@ -207,127 +397,33 @@ export function ResumePreview({ data, onUpdate }: ResumePreviewProps) {
       <Card className="p-0 overflow-hidden transition-all duration-300">
         <div
           ref={resumeRef}
-          className="bg-white p-8 md:p-12 max-w-[800px] mx-auto"
-          style={getResumeStyles(theme)}
+          className="bg-white max-w-[800px] mx-auto"
+          style={resumeStyles}
         >
           {/* Header */}
-          <header style={getHeaderStyles(theme)}>
-            <h1 style={{ margin: 0, marginBottom: "0.25rem" }}>
-              {data.fullName}
-            </h1>
+          <header style={headerStyles}>
+            <h1 style={nameStyles}>{data.fullName}</h1>
             <p style={{ 
               fontSize: "1.1rem", 
-              color: theme.colors.mutedText,
+              color: "#666",
               margin: 0,
               fontWeight: 400 
             }}>
               {data.jobTitle}
             </p>
+            {contactInfo.length > 0 && (
+              <p style={{ 
+                fontSize: "0.875rem", 
+                color: "#666",
+                margin: "0.5rem 0 0 0",
+              }}>
+                {contactInfo.join(getSeparator())}
+              </p>
+            )}
           </header>
 
-          {/* Summary */}
-          {data.summary && (
-            <section style={getSectionStyles(theme)}>
-              <h2 style={getSectionTitleStyles(theme)}>
-                Professional Summary
-              </h2>
-              <p style={{ margin: 0 }}>
-                <EditableText field="summary" value={data.summary} />
-              </p>
-            </section>
-          )}
-
-          {/* Experience */}
-          {data.experiences.length > 0 && (
-            <section style={getSectionStyles(theme)}>
-              <h2 style={getSectionTitleStyles(theme)}>
-                Experience
-              </h2>
-              {data.experiences.map((exp, idx) => (
-                <div key={idx} style={{ marginBottom: "1rem" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.25rem" }}>
-                    <div>
-                      <h3 style={{ fontWeight: 600, margin: 0, color: theme.colors.bodyText }}>{exp.role}</h3>
-                      <p style={{ fontStyle: "italic", color: theme.colors.mutedText, margin: 0 }}>{exp.company}</p>
-                    </div>
-                    <span style={{ color: theme.colors.mutedText, fontSize: "0.875rem" }}>
-                      {exp.duration}
-                    </span>
-                  </div>
-                  <ul style={{ listStyleType: "disc", paddingLeft: "1.25rem", margin: "0.5rem 0 0 0" }}>
-                    {exp.bullets.map((bullet, bulletIdx) => (
-                      <li key={bulletIdx} style={{ marginBottom: "0.25rem" }}>
-                        <EditableText
-                          field={`experience.${idx}.bullets.${bulletIdx}`}
-                          value={bullet}
-                        />
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </section>
-          )}
-
-          {/* Skills */}
-          {data.skills.length > 0 && (
-            <section style={getSectionStyles(theme)}>
-              <h2 style={getSectionTitleStyles(theme)}>
-                Skills
-              </h2>
-              <p style={{ margin: 0 }}>{data.skills.join(theme.bodyStyle.skillsSeparator)}</p>
-            </section>
-          )}
-
-          {/* Education */}
-          {data.education.length > 0 && (
-            <section style={getSectionStyles(theme)}>
-              <h2 style={getSectionTitleStyles(theme)}>
-                Education
-              </h2>
-              {data.education.map((edu, idx) => (
-                <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem" }}>
-                  <div>
-                    <h3 style={{ fontWeight: 600, margin: 0, color: theme.colors.bodyText }}>{edu.degree}</h3>
-                    <p style={{ fontStyle: "italic", color: theme.colors.mutedText, margin: 0 }}>{edu.institution}</p>
-                  </div>
-                  <span style={{ color: theme.colors.mutedText, fontSize: "0.875rem" }}>{edu.year}</span>
-                </div>
-              ))}
-            </section>
-          )}
-
-          {/* Projects */}
-          {data.projects.length > 0 && (
-            <section style={getSectionStyles(theme)}>
-              <h2 style={getSectionTitleStyles(theme)}>
-                Projects
-              </h2>
-              {data.projects.map((proj, idx) => (
-                <div key={idx} style={{ marginBottom: "0.75rem" }}>
-                  <h3 style={{ fontWeight: 600, margin: 0, color: theme.colors.bodyText }}>{proj.name}</h3>
-                  <p style={{ margin: "0.25rem 0 0 0" }}>
-                    <EditableText
-                      field={`project.${idx}.description`}
-                      value={proj.description}
-                    />
-                  </p>
-                </div>
-              ))}
-            </section>
-          )}
-
-          {/* Certifications */}
-          {data.certifications && (
-            <section style={getSectionStyles(theme)}>
-              <h2 style={getSectionTitleStyles(theme)}>
-                Certifications & Achievements
-              </h2>
-              <p style={{ margin: 0 }}>
-                <EditableText field="certifications" value={data.certifications} />
-              </p>
-            </section>
-          )}
+          {/* Dynamic Sections */}
+          {visibleSections.map((section) => renderSection(section.id))}
         </div>
       </Card>
     </div>
